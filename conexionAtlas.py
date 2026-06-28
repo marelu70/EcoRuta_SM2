@@ -5,7 +5,9 @@ MONGO_URI = "mongodb+srv://ks1398501_db_user:4JD5JcLp75fgafTA@cluster0.j78ycv4.m
 
 try:
     # Ajustamos los parámetros al nuevo estándar moderno de PyMongo
-   client = MongoClient(MONGO_URI, tls=True, tlsAllowInvalidCertificates=True)
+  try:
+    client = MongoClient(MONGO_URI, tls=True, tlsAllowInvalidCertificates=True)
+    db = client['EcoRuta']
         MONGO_URI,
         tls=True,
         tlsAllowInvalidCertificates=True  # Parche definitivo moderno para el bloqueo del internet escolar
