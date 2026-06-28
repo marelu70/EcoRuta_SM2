@@ -1,0 +1,180 @@
+/* Paleta de Colores ECORuta - San José del Rincón */
+:root {
+    --bg-principal: #0d0f12;       /* Negro azulado profundo */
+    --bg-tarjeta: #16191e;         /* Gris oscuro para contenedores */
+    --verde-eco: #10b981;          /* Verde esmeralda para éxito y botones */
+    --verde-hover: #059669;        /* Verde más oscuro para estados hover */
+    --texto-blanco: #f3f4f6;       /* Blanco suave para lectura cómoda */
+    --texto-mutado: #9ca3af;       /* Gris claro para descripciones secundarias */
+    --borde-sutil: #242933;        /* Líneas de división internas */
+    --alerta-rojo: #ef4444;        /* Para botones de eliminar o reportes pendientes */
+}
+
+body {
+    background-color: var(--bg-principal);
+    color: var(--texto-blanco);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+}
+
+/* Identidad Visual: Barra de Navegación */
+.navbar {
+    background-color: var(--bg-tarjeta);
+    border-bottom: 3px solid var(--verde-eco);
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.navbar .brand {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--texto-blanco);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.navbar .brand span {
+    color: var(--verde-eco);
+}
+
+/* Contenedor de la Aplicación */
+.container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+/* Encabezados del Proyecto */
+h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+h1 span {
+    color: var(--verde-eco);
+}
+
+.subtitle {
+    color: var(--texto-mutated);
+    font-size: 16px;
+    margin-top: 0;
+    margin-bottom: 30px;
+}
+
+/* Tarjetas de Contenedor (Dashboard y Formularios) */
+.card-dark {
+    background-color: var(--bg-tarjeta);
+    border: 1px solid var(--borde-sutil);
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+.card-dark h2 {
+    font-size: 20px;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--verde-eco);
+    padding-left: 10px;
+}
+
+/* Tablas de Datos (Unidades, Rutas y Feedback) */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background-color: rgba(13, 15, 18, 0.5);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th {
+    background-color: rgba(36, 41, 51, 0.8);
+    color: var(--verde-eco);
+    padding: 14px 16px;
+    font-weight: 600;
+    text-align: left;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--borde-sutil);
+    color: #e5e7eb;
+    font-size: 15px;
+}
+
+tr:hover {
+    background-color: rgba(36, 41, 51, 0.4);
+}
+
+/* Elementos de Formulario (Inputs y Selects) */
+input, select, textarea {
+    background-color: var(--bg-principal);
+    border: 1px solid var(--borde-sutil);
+    border-radius: 6px;
+    color: var(--texto-blanco);
+    padding: 12px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--verde-eco);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+/* Estilos de Botones */
+.btn-eco {
+    background-color: var(--verde-eco);
+    color: #0d0f12;
+    font-weight: 600;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-eco:hover {
+    background-color: var(--verde-hover);
+}
+
+.btn-danger {
+    background-color: transparent;
+    color: var(--alerta-rojo);
+    border: 1px solid var(--alerta-rojo);
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+    background-color: var(--alerta-rojo);
+    color: var(--texto-blanco);
+}
+
+/* Badges para Estados de Reportes */
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.badge-pendiente { background-color: rgba(239, 68, 68, 0.2); color: #f87171; }
+.badge-proceso { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.badge-atendido { background-color: rgba(16, 185, 129, 0.2); color: #34d399; }

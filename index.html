@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoRuta - Bienvenido</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-principal: #0d0f12;      /* Fondo negro profundo igual a tu captura */
+            --bg-tarjeta: #16191e;        /* Gris oscuro para bloques */
+            --verde-eco: #10b981;         /* Verde brillante esmeralda */
+            --verde-hover: #059669;       /* Verde interactivo para botones */
+            --texto-blanco: #f3f4f6;      /* Blanco suave */
+            --texto-gris: #9ca3af;        /* Gris para descripciones */
+            --borde: #242933;             /* Líneas sutiles de división */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-principal);
+            color: var(--texto-blanco);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- MENÚ DE NAVEGACIÓN --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 6%;
+            background-color: var(--bg-tarjeta);
+            border-bottom: 2px solid var(--verde-eco);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--texto-blanco);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span {
+            color: var(--verde-eco);
+        }
+
+        .btn-ingresar {
+            background-color: var(--verde-eco);
+            color: #0d0f12;
+            text-decoration: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-ingresar:hover {
+            background-color: var(--verde-hover);
+            transform: scale(1.03);
+        }
+
+        /* --- SECCIÓN PRINCIPAL (HERO) --- */
+        .hero {
+            text-align: center;
+            max-width: 800px;
+            margin: 60px auto 30px auto;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-size: 44px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .hero h1 span {
+            color: var(--verde-eco);
+        }
+
+        .hero p {
+            color: var(--texto-gris);
+            font-size: 17px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        /* --- SECCIÓN MÓDULOS (CON EL CAMIÓN DE BASURA) --- */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1000px;
+            margin: 10px auto 60px auto;
+            padding: 0 20px;
+        }
+
+        .feature-card {
+            background-color: var(--bg-tarjeta);
+            border: 1px solid var(--borde);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: left;
+            transition: transform 0.2s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--verde-eco);
+        }
+
+        .icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .feature-card h3 {
+            font-size: 19px;
+            margin: 0 0 10px 0;
+            color: var(--texto-blanco);
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            color: var(--texto-gris);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* --- PIE DE PÁGINA (CECyTEM) --- */
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 25px;
+            border-top: 1px solid var(--borde);
+            color: var(--texto-gris);
+            font-size: 13px;
+            background-color: #090b0e;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="#" class="logo">🚛 Eco<span>Ruta</span></a>
+        <a href="/login" class="btn-ingresar">Ingresar al Sistema</a>
+    </header>
+
+    <div class="hero">
+        <h1>Bienvenido a <span>EcoRuta</span></h1>
+        <p>La plataforma inteligente para el monitoreo de rutas de recolección de basura y gestión de residuos urbanos.</p>
+    </div>
+
+    <div class="features">
+        <div class="feature-card">
+            <div class="icon">🗑️</div>
+            <h3>Gestión de Desechos</h3>
+            <p>Clasificación integral de residuos y supervisión de contenedores comunitarios distribuidos en el municipio.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon">🚛</div>
+            <h3>Camión de Basura</h3>
+            <p>Monitoreo estratégico de las unidades recolectoras, sus horarios asignados y la cobertura de los operadores en ruta.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon">📋</div>
+            <h3>Reporte Ciudadano</h3>
+            <p>Portal directo para reportar fallas en el servicio público, retrasos en la recolección o incidencias en las calles.</p>
+        </div>
+    </div>
+
+    <footer>
+         Colegio de Estudios Científicos y Tecnológicos del Estado de México Plantel San José del Rincón<br>
+        &copy; 2026 EcoRuta. Todos los derechos reservados.
+    </footer>
+
+</body>
+</html>

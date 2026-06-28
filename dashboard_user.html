@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>EcoRuta - Panel de Ciudadano</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* Estilos de navegación y control de pestañas interactivo */
+        .navbar-eco {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #1a1a1a;
+            padding: 10px 20px;
+            border-bottom: 2px solid #2ecc71;
+        }
+        .nav-buttons-panel {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .btn-nav-eco {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .btn-nav-eco:hover, .btn-nav-eco.active {
+            background-color: #2ecc71;
+            color: #1a1a1a;
+            font-weight: bold;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .display-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .display-table th, .display-table td {
+            border: 1px solid #333;
+            padding: 12px;
+            text-align: left;
+        }
+        .form-group-eco {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .form-group-eco input, .form-group-eco textarea, .form-group-eco select {
+            padding: 10px;
+            background-color: #222;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="body-dark">
+
+    <nav class="navbar-eco">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">♻️</span>
+            <h2 style="margin: 0; color: #fff;">EcoRuta Ciudadana</h2>
+        </div>
+        <div style="color: #eee; font-size: 14px;">
+            Municipio de San José del Rincón | Panel de Control
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="/" class="btn-eco" style="text-decoration: none; padding: 8px 15px;">← Volver al Inicio</a>
+            <a href="{{ url_for('logout') }}" class="btn-eco btn-danger" style="text-decoration: none; padding: 8px 15px;">Cerrar Sesión 🚪</a>
+        </div>
+    </nav>
+
+    <div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash-messages {{ category }}" style="margin-bottom: 20px; padding: 10px; border-radius: 5px;">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h1>Atención Ciudadana y <span style="color: #2ecc71;">Monitoreo Colectivo</span></h1>
+            <p style="color: #888;">Consulta los horarios de recolección en tiempo real o reporta anomalías del servicio.</p>
+        </div>
+
+        <div class="nav-buttons-panel">
+            <button class="btn-nav-eco active" onclick="openModule(event, 'user-rutas')">🗺️ Ver Rutas</button>
+            <button class="btn-nav-eco" onclick="openModule(event, 'user-camiones')">🚛 Ver Camiones</button>
+            <button class="btn-nav-eco" onclick="openModule(event, 'user-reporte-nuevo')">⚠️ Levantar Reporte</button>
+            <button class="btn-nav-eco" onclick="openModule(event, 'user-encuesta-nueva')">✍️ Responder Encuesta</button>
+        </div>
+
+        <hr style="border-color: #333; margin: 30px 0;">
+
+        <div id="user-rutas" class="tab-content active">
+            <div class="card-dark">
+                <h3>🗺️ Horarios e Itinerarios de Rutas Municipales</h3>
+                <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Consulta qué días y en qué horarios pasará el camión recolector por tu zona.</p>
+                
+                <div style="margin-bottom: 25px;">
+                    <div id="map-usuario" style="width: 100%; height: 400px; border-radius: 8px; border: 2px solid #2ecc71; z-index: 1;"></div>
+                </div>
+
+                <table class="display-table">
+                    <thead>
+                        <tr style="color: #2ecc71;">
+                            <th>Código</th>
+                            <th>Zona / Localidad</th>
+                            <th>Horario de Cobertura</th>
+                            <th>Días de Servicio</th>
+                            <th>Unidad Vehicular Asignada</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in rutas %}
+                        <tr>
+                            <td><strong style="color: #2ecc71;">{{ r.nombre }}</strong></td>
+                            <td class="user-zona-texto">{{ r.zona }}</td>
+                            <td>{{ r.horario }}</td>
+                            <td>{{ r.dias|join(', ') }}</td>
+                            <td><span style="background: #222; padding: 4px 8px; border-radius: 3px; font-family: monospace;">{{ r.unidad_id }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="user-camiones" class="tab-content">
+            <div class="card-dark">
+                <h3>🚛 Unidades Logísticas en Operación</h3>
+                <p style="color: #888; font-size: 14px; margin-bottom: 15px;">Listado oficial de camiones y el estado de operatividad mecánica reportado por el municipio.</p>
+                
+                <table class="display-table">
+                    <thead>
+                        <tr style="color: #2ecc71;">
+                            <th>No. Económico / Placas</th>
+                            <th>Modelo de la Unidad</th>
+                            <th>Capacidad de Carga</th>
+                            <th>Chofer Responsable</th>
+                            <th>Estado de Operación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in camiones %}
+                        <tr>
+                            <td style="font-weight: bold;">{{ c.placas }}</td>
+                            <td>{{ c.modelo }}</td>
+                            <td>{{ c.capacidad }} Toneladas</td>
+                            <td>{{ c.chofer_responsable }}</td>
+                            <td>
+                                {% if c.estado == 'Óptimo' %}
+                                    <span style="color: #2ecc71; font-weight: bold;">🟢 En Servicio ({{ c.estado }})</span>
+                                {% else %}
+                                    <span style="color: #f1c40f; font-weight: bold;">🟡 Taller / En {{ c.estado }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="user-reporte-nuevo" class="tab-content">
+            <div class="grid-2col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+                
+                <div class="card-dark">
+                    <h3>⚠️ Reportar Incidencia de Recolección</h3>
+                    <p style="color: #888; font-size: 14px; margin-bottom: 15px;">¿El camión no pasó a tiempo o hubo alguna omisión? Inicia un reporte directo para revisión administrativa.</p>
+                    
+                    <form action="{{ url_for('crear_reporte') }}" method="POST">
+                        <div class="form-group-eco">
+                            <label>Ubicación Exacta / Calle:</label>
+                            <input type="text" name="ubicacion_incidente" placeholder="Ej: Calle Juárez #10, Centro" required>
+                        </div>
+                        <div class="form-group-eco">
+                            <label>Asunto:</label>
+                            <select name="asunto" required>
+                                <option value="Omisión de ruta">Omisión de ruta (No pasó el camión)</option>
+                                <option value="Retraso excesivo">Retraso excesivo de horario</option>
+                                <option value="Tiradero de basura">Escombros/Basura derramada</option>
+                                <option value="Otro">Otro caso / Reporte especial</option>
+                            </select>
+                        </div>
+                        <div class="form-group-eco">
+                            <label>Detalles / Descripción del Suceso:</label>
+                            <textarea name="details" rows="4" placeholder="Escribe aquí los detalles observados para que el administrador pueda revisarlo..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn-eco" style="width: 100%;">Enviar Reporte a Revisión</button>
+                    </form>
+                </div>
+
+                <div class="card-dark">
+                    <h3>📋 Estatus de Mis Reportes Enviados</h3>
+                    <div style="max-height: 400px; overflow-y: auto; margin-top: 15px;">
+                        {% if reportes %}
+                            {% for rep in reportes %}
+                            <div style="background-color: #222; padding: 15px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #2ecc71;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h4 style="margin: 0; color: #2ecc71;">{{ rep.asunto }}</h4>
+                                    <span style="font-size: 12px; background: #333; padding: 3px 6px; border-radius: 3px;">
+                                        Estatus: <strong>{{ rep.estado }}</strong>
+                                    </span>
+                                </div>
+                                <p style="margin: 5px 0 0 0; font-size: 13px; color: #ccc;">{{ rep.detalle }}</p>
+                                <small style="color: #666; display: block; margin-top: 5px;">📍 {{ rep.ubicacion_incidente }}</small>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p style="color: #666; font-style: italic;">Aún no has levantado ninguna observación en este periodo.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="user-encuesta-nueva" class="tab-content">
+            <div class="card-dark" style="max-width: 600px; margin: 0 auto;">
+                <h3>✍️ Encuesta de Evaluación del Servicio</h3>
+                <p style="color: #888; font-size: 14px; margin-bottom: 20px;">Tu opinión ayuda al ayuntamiento a optimizar los tiempos de las rutas logísticas.</p>
+                
+                <form action="{{ url_for('crear_encuesta') }}" method="POST">
+                    <div class="form-group-eco">
+                        <label>Selecciona la Ruta a Evaluar:</label>
+                        <select name="id_ruta_evaluated" required>
+                            {% for r in rutas %}
+                                <option value="{{ r.nombre }}">{{ r.nombre }} — (Zona: {{ r.zona }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group-eco">
+                        <label>Nivel de Limpieza de la Unidad (1 al 5):</label>
+                        <select name="puntuacion_limpieza" required>
+                            <option value="5">⭐⭐⭐⭐⭐ Excelente limpieza</option>
+                            <option value="4">⭐⭐⭐⭐ Regular/Limpio</option>
+                            <option value="3">⭐⭐⭐ Aceptable</option>
+                            <option value="2">⭐⭐ Deficiente</option>
+                            <option value="1">⭐ Pésimo estado de higiene</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group-eco">
+                        <label>Puntualidad del Operador respecto al Horario (1 al 5):</label>
+                        <select name="puntuacion_puntualidad" required>
+                            <option value="5">⭐⭐⭐⭐⭐ Muy puntual</option>
+                            <option value="4">⭐⭐⭐⭐ Retraso mínimo</option>
+                            <option value="3">⭐⭐⭐ Tolerable</option>
+                            <option value="2">⭐⭐ Impuntual</option>
+                            <option value="1">⭐ Nunca cumple el horario establecido</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group-eco">
+                        <label>Comentarios Adicionales u Observación de Mejora:</label>
+                        <textarea name="comentarios" rows="3" placeholder="Ej: Los choferes son amables pero la ruta del centro necesita pasar más temprano..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-eco" style="width: 100%; margin-top: 10px;">Subir Encuesta a Calidad</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        function openModule(evt, moduleName) {
+            var i, tabcontent, tablinks;
+            // Ocultar todos los paneles de usuario
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            // Desactivar el estado visual de los botones
+            tablinks = document.getElementsByClassName("btn-nav-eco");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            // Mostrar panel actual y encender botón activo
+            document.getElementById(moduleName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // LÓGICA DE INICIALIZACIÓN DEL MAPA GRATUITO DEL CIUDADANO
+        document.addEventListener("DOMContentLoaded", function() {
+            // Coordenadas fijas de San José del Rincón (Ajustamos zoom a 14 para enfocar la cabecera)
+            var mapUser = L.map('map-usuario').setView([19.6485, -100.1256], 14);
+
+            // Capa oscura (CartoDB DarkMatter) a juego con el diseño oscuro del proyecto
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO'
+            }).addTo(mapUser);
+
+            // ========================================================
+            // MARCADOR COMPONENTE 1: SAN JOSÉ CENTRO
+            // ========================================================
+            var centroMarker = L.marker([19.6455, -100.1260]).addTo(mapUser);
+            centroMarker.bindPopup(`
+                <div style="color:#000; font-family: sans-serif;">
+                    <strong style="color: #2ecc71; font-size: 14px;">📍 San José Centro</strong><br>
+                    <span style="color: #555;">Zona de cobertura correspondiente al cuadro municipal y centro.</span>
+                </div>
+            `);
+
+            // ========================================================
+            // MARCADOR COMPONENTE 2: EJIDO SAN JOSÉ
+            // ========================================================
+            var ejidoMarker = L.marker([19.6515, -100.1290]).addTo(mapUser);
+            ejidoMarker.bindPopup(`
+                <div style="color:#000; font-family: sans-serif;">
+                    <strong style="color: #2ecc71; font-size: 14px;">📍 Ejido San José</strong><br>
+                    <span style="color: #555;">Zona de cobertura correspondiente al sector Ejido San José.</span>
+                </div>
+            `);
+
+            // Muestra abierto el popup del centro al cargar el mapa
+            centroMarker.openPopup();
+
+            // Leer las zonas desde la tabla para geolocalizarlas gratis en Nominatim
+            var celdasZona = document.getElementsByClassName('user-zona-texto');
+
+            for (var i = 0; i < celdasZona.length; i++) {
+                var zonaTexto = celdasZona[i].innerText;
+                
+                // Evitar duplicación de pines si la celda dinámica de la BD contiene centro o ejido
+                if (zonaTexto.toLowerCase().includes("centro") || zonaTexto.toLowerCase().includes("ejido")) {
+                    continue;
+                }
+
+                var direccionTexto = zonaTexto + ", San José del Rincón, Estado de México";
+
+                (function(dir) {
+                    fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(dir))
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data && data.length > 0) {
+                                var lat = data[0].lat;
+                                var lon = data[0].lon;
+                                
+                                L.marker([lat, lon]).addTo(mapUser)
+                                    .bindPopup('<div style="color:#000;"><strong>Zona de Cobertura EcoRuta:</strong><br>' + dir + '</div>');
+                            }
+                        })
+                        .catch(err => console.log("Error cargando punto en Nominatim: ", err));
+                })(direccionTexto);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>EcoRuta - Panel de Administración</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* Estilos rápidos para la barra de navegación y control de pestañas */
+        .navbar-eco {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #1a1a1a;
+            padding: 10px 20px;
+            border-bottom: 2px solid #2ecc71;
+        }
+        .nav-buttons-panel {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .btn-nav-eco {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .btn-nav-eco:hover, .btn-nav-eco.active {
+            background-color: #2ecc71;
+            color: #1a1a1a;
+            font-weight: bold;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .crud-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .crud-table th, .crud-table td {
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: left;
+        }
+        .form-inline {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="body-dark">
+
+    <nav class="navbar-eco">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">Customer🚛</span>
+            <h2 style="margin: 0; color: #fff;">EcoRuta Admin Panel</h2>
+        </div>
+        <div style="color: #eee; font-size: 14px;">
+            Municipio de San José del Rincón | <strong>Administrador</strong>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="/" class="btn-eco" style="text-decoration: none; padding: 8px 15px;">← Volver al Inicio</a>
+            <a href="{{ url_for('logout') }}" class="btn-eco btn-danger" style="text-decoration: none; padding: 8px 15px;">Cerrar Sesión 🚪</a>
+        </div>
+    </nav>
+
+    <div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash-messages {{ category }}" style="margin-bottom: 20px; padding: 10px; border-radius: 5px;">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h1>Optimización de <span style="color: #2ecc71;">Recolección de Basura</span></h1>
+            <p style="color: #888;">Selecciona un módulo del sistema para gestionar las operaciones logísticas municipales.</p>
+        </div>
+
+        <div class="nav-buttons-panel">
+            <button class="btn-nav-eco active" onclick="openModule(event, 'mod-rutas')">🗺️ Rutas Logísticas</button>
+            <button class="btn-nav-eco" onclick="openModule(event, 'mod-camiones')">🚛 Control de Camiones</button>
+            <button class="btn-nav-eco" onclick="openModule(event, 'mod-reportes')">📋 Reportes Ciudadanos</button>
+            <button class="btn-nav-eco" onclick="openModule(event, 'mod-encuestas')">📊 Ver Encuestas</button>
+        </div>
+
+        <hr style="border-color: #333; margin: 30px 0;">
+
+        <div id="mod-rutas" class="tab-content active">
+            <div class="card-dark">
+                <h3>🗺️ Planificación e Itinerario de Rutas</h3>
+                
+                <form action="{{ url_for('agregar_ruta') }}" method="POST" style="margin-bottom: 30px; background: #222; padding: 15px; border-radius: 5px;">
+                    <h4>Planificar Nueva Ruta</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <input type="text" name="nombre" placeholder="Nombre (Ej: R003)" required>
+                        <input type="text" name="zona" placeholder="Zona Municipal" required>
+                        <input type="text" name="horario" placeholder="Horario (Ej: 07:00 AM - 12:00 PM)" required>
+                        <input type="text" name="dias" placeholder="Días (separados por coma)" required>
+                        <input type="text" name="unidad_id" placeholder="ID Unidad / Placas" required>
+                    </div>
+                    <button type="submit" class="btn-eco" style="margin-top: 10px;">Agregar Ruta</button>
+                </form>
+
+                <div style="margin-bottom: 25px;">
+                    <h4>Visualización Geográfica de Cobertura</h4>
+                    <div id="map-admin" style="width: 100%; height: 400px; border-radius: 8px; border: 2px solid #2ecc71; z-index: 1;"></div>
+                </div>
+
+                <table class="crud-table">
+                    <thead>
+                        <tr style="color: #2ecc71;">
+                            <th>Nombre/Código</th>
+                            <th>Zona de Cobertura</th>
+                            <th>Horario Asignado</th>
+                            <th>Días de Servicio</th>
+                            <th>Unidad Vehicular</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in rutas %}
+                        <tr>
+                            <form action="{{ url_for('editar_ruta', id=r._id) }}" method="POST">
+                                <td><input type="text" name="nombre" value="{{ r.nombre }}" style="width: 80px;"></td>
+                                <td><input type="text" name="zona" value="{{ r.zona }}" class="zona-direccion"></td>
+                                <td><input type="text" name="horario" value="{{ r.horario }}"></td>
+                                <td><input type="text" name="dias" value="{{ r.dias|join(', ') }}"></td>
+                                <td><input type="text" name="unidad_id" value="{{ r.unidad_id }}" style="width: 90px;"></td>
+                                <td>
+                                    <button type="submit" class="btn-eco" style="padding: 4px 8px; font-size: 12px;">Actualizar</button>
+                                    <a href="{{ url_for('eliminar_ruta', id=r._id) }}" class="btn-nav-eco btn-danger" style="padding: 4px 8px; font-size: 12px; text-decoration: none;" onclick="return confirm('¿Seguro que deseas eliminar esta ruta de Atlas?')">Eliminar</a>
+                                </td>
+                            </form>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="mod-camiones" class="tab-content">
+            <div class="card-dark">
+                <h3>Campiñes 🚛 Gestión Física de Unidades de Recolección</h3>
+                
+                <form action="{{ url_for('agregar_camion') }}" method="POST" style="margin-bottom: 30px; background: #222; padding: 15px; border-radius: 5px;">
+                    <h4>Registrar Nueva Unidad Pesada</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+                        <input type="text" name="placas" placeholder="Número de Placas" required>
+                        <input type="text" name="modelo" placeholder="Modelo / Marca" required>
+                        <input type="number" step="0.1" name="capacidad" placeholder="Capacidad en Toneladas" required>
+                        <input type="text" name="chofer_responsable" placeholder="Operador asignado">
+                        <select name="estado" required>
+                            <option value="Óptimo">Óptimo</option>
+                            <option value="Mantenimiento">Mantenimiento</option>
+                            <option value="Fuera de Servicio">Fuera de Servicio</option>
+                        </select>
+                        <input type="date" name="ultima_revision" placeholder="Última revisión técnica">
+                    </div>
+                    <button type="submit" class="btn-eco" style="margin-top: 10px;">Dar de Alta Camión</button>
+                </form>
+
+                <table class="crud-table">
+                    <thead>
+                        <tr style="color: #2ecc71;">
+                            <th>Placas No. Económico</th>
+                            <th>Modelo</th>
+                            <th>Capacidad (Tons)</th>
+                            <th>Chofer Responsable</th>
+                            <th>Estado Mecánico</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in camiones %}
+                        <tr>
+                            <form action="{{ url_for('editar_camion', id=c._id) }}" method="POST">
+                                <td><input type="text" name="placas" value="{{ c.placas }}" style="width: 80px;"></td>
+                                <td><input type="text" name="modelo" value="{{ c.modelo }}"></td>
+                                <td><input type="number" step="0.1" name="capacidad" value="{{ c.capacidad }}" style="width: 70px;"></td>
+                                <td><input type="text" name="chofer_responsable" value="{{ c.chofer_responsable }}"></td>
+                                <td>
+                                    <select name="estado">
+                                        <option value="Óptimo" {% if c.estado == 'Óptimo' %}selected{% endif %}>Óptimo</option>
+                                        <option value="Mantenimiento" {% if c.estado == 'Mantenimiento' %}selected{% endif %}>Mantenimiento</option>
+                                        <option value="Fuera de Servicio" {% if c.estado == 'Fuera de Servicio' %}selected{% endif %}>Fuera de Servicio</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button type="submit" class="btn-eco" style="padding: 4px 8px; font-size: 12px;">Guardar</button>
+                                    <a href="{{ url_for('eliminar_camion', id=c._id) }}" class="btn-nav-eco btn-danger" style="padding: 4px 8px; font-size: 12px; text-decoration: none;" onclick="return confirm('¿Eliminar esta unidad del inventario?')">Eliminar</a>
+                                </td>
+                            </form>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="mod-reportes" class="tab-content">
+            <div class="card-dark">
+                <h3>📋 Observaciones y Reportes de Incidencias Comunitarias</h3>
+                <p style="color: #888; font-size: 14px;">Monitoreo de quejas ingresadas por los vecinos sobre omisión o retrasos de rutas.</p>
+                
+                <table class="crud-table">
+                    <thead>
+                        <tr style="color: #2ecc71;">
+                            <th>Ciudadano</th>
+                            <th>Ubicación del Incidente</th>
+                            <th>Asunto</th>
+                            <th>Detalle / Descripción</th>
+                            <th>Estatus Operativo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rep in reportes %}
+                        <tr>
+                            <td>{{ rep.usuario }}</td>
+                            <td>{{ rep.ubicacion_incidente }}</td>
+                            <td><strong>{{ rep.asunto }}</strong></td>
+                            <td>{{ rep.detalle }}</td>
+                            <td>
+                                <form action="{{ url_for('cambiar_estado_reporte', id=rep._id) }}" method="POST" class="form-inline">
+                                    <select name="estado" onchange="this.form.submit()" style="background-color: #111; color: #fff; padding: 5px; border-radius: 3px;">
+                                        <option value="Pendiente" {% if rep.estado == 'Pendiente' %}selected{% endif %}>🔴 Pendiente</option>
+                                        <option value="En Proceso" {% if rep.estado == 'En Proceso' %}selected{% endif %}>🟡 En Proceso</option>
+                                        <option value="Atendido" {% if rep.estado == 'Atendido' %}selected{% endif %}>🟢 Atendido</option>
+                                    </select>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="mod-encuestas" class="tab-content">
+            <div class="card-dark">
+                <h3>📊 Análisis de Feedback y Encuestas de Satisfacción</h3>
+                <p style="color: #888; font-size: 14px;">Módulo de lectura exclusiva de métricas de calidad (Puntualidad y Limpieza del servicio).</p>
+                
+                <table class="crud-table">
+                    <thead>
+                        <tr style="color: #2ecc71;">
+                            <th>Usuario</th>
+                            <th>Ruta Evaluada</th>
+                            <th>Puntuación Limpieza</th>
+                            <th>Puntuación Puntualidad</th>
+                            <th>Comentarios del Vecino</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enc in encuestas %}
+                        <tr>
+                            <td>{{ enc.usuario }}</td>
+                            <td style="color: #2ecc71; font-weight: bold;">{{ enc.id_ruta_evaluada }}</td>
+                            <td>⭐ {{ enc.puntuacion_limpieza }} / 5</td>
+                            <td>⭐ {{ enc.puntuacion_puntualidad }} / 5</td>
+                            <td style="font-style: italic; color: #ccc;">"{{ enc.comentarios }}"</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        function openModule(evt, moduleName) {
+            // Ocultar todos los bloques de contenido
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+
+            // Quitar la clase active de todos los botones
+            tablinks = document.getElementsByClassName("btn-nav-eco");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+
+            // Mostrar el bloque seleccionado y añadir la clase active al botón pulsado
+            document.getElementById(moduleName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // LÓGICA DE INICIALIZACIÓN DEL MAPA GRATUITO
+        document.addEventListener("DOMContentLoaded", function() {
+            // Coordenadas céntricas de San José del Rincón, Estado de México
+            var mapAdmin = L.map('map-admin').setView([19.6461, -100.1256], 12);
+
+            // Capa oscura elegante (CartoDB DarkMatter) libre de cobros
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO'
+            }).addTo(mapAdmin);
+
+            // Motor de búsqueda gratuito Nominatim
+            var inputsZona = document.getElementsByClassName('zona-direccion');
+
+            for (var i = 0; i < inputsZona.length; i++) {
+                var direccionTexto = inputsZona[i].value + ", San José del Rincón, Estado de México";
+
+                (function(dir) {
+                    fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(dir))
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data && data.length > 0) {
+                                var lat = data[0].lat;
+                                var lon = data[0].lon;
+                                
+                                L.marker([lat, lon]).addTo(mapAdmin)
+                                    .bindPopup('<div style="color:#000;"><strong>Ruta Logística Activa:</strong><br>' + dir + '</div>');
+                            }
+                        })
+                        .catch(err => console.log("Error buscando coordenadas en Nominatim: ", err));
+                })(direccionTexto);
+            }
+        });
+    </script>
+</body>
+</html>
