@@ -5,12 +5,14 @@ MONGO_URI = "mongodb+srv://ks1398501_db_user:4JD5JcLp75fgafTA@cluster0.j78ycv4.m
 
 try:
     # Ajustamos los parámetros al nuevo estándar moderno de PyMongo
-  try:
+  MONGO_URI = "tu_cadena_de_conexion_aqui"
+
+try:
     client = MongoClient(MONGO_URI, tls=True, tlsAllowInvalidCertificates=True)
     db = client['EcoRuta']
-        MONGO_URI,
-        tls=True,
-        tlsAllowInvalidCertificates=True  # Parche definitivo moderno para el bloqueo del internet escolar
+    print("[EcoRuta] Conexión exitosa a MongoDB Atlas.")
+except Exception as e:
+    print(f"[EcoRuta] Error al conectar: {e}")
     )
     db = client['EcoRuta']
     
